@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tip Calculator</title>
+    <script>
+      (function () {
+        const stored = localStorage.getItem("tip-theme");
+        const theme =
+          stored === "light" || stored === "dark"
+            ? stored
+            : window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,700&family=Outfit:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root,
+      [data-theme="light"] {
+        --bg: #e7eee8;
+        --glow-1: #c5ddd2;
+        --glow-2: #d8cfc0;
+        --card: #f7f2ea;
+        --ink: #16241f;
+        --muted: #5d6d66;
+        --accent: #2f7a62;
+        --accent-dark: #215647;
+        --line: #ddd4c6;
+        --chip: #fffdf9;
+        --results: #1c332b;
+        --results-text: #eef6f2;
+        --results-muted: #a8c0b6;
+        --results-total: #c8ead8;
+        --results-rule: rgba(255, 255, 255, 0.1);
+        --shadow: 0 24px 50px rgba(22, 36, 31, 0.12);
+        --toggle-bg: #fffdf9;
+        color-scheme: light;
+      }
+
+      [data-theme="dark"] {
+        --bg: #12211c;
+        --glow-1: #2a5546;
+        --glow-2: #1a3a30;
+        --card: #1a2c26;
+        --ink: #eef6f2;
+        --muted: #9bb0a7;
+        --accent: #5dba98;
+        --accent-dark: #8fd4b6;
+        --line: #314940;
+        --chip: #22362f;
+        --results: #12211c;
+        --results-text: #eef6f2;
+        --results-muted: #a8c0b6;
+        --results-total: #c8ead8;
+        --results-rule: rgba(255, 255, 255, 0.1);
+        --shadow: 0 30px 60px rgba(0, 0, 0, 0.28);
+        --toggle-bg: #22362f;
+        color-scheme: dark;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        min-height: 100vh;
+        font-family: Outfit, system-ui, sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(ellipse 80% 50% at 10% 0%, var(--glow-1) 0%, transparent 55%),
+          radial-gradient(ellipse 60% 40% at 100% 100%, var(--glow-2) 0%, transparent 50%),
+          var(--bg);
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        transition: background 0.25s ease, color 0.25s ease;
+      }
+
+      .app {
+        width: min(440px, 100%);
+        background: var(--card);
+        border-radius: 28px;
+        padding: 32px 28px 28px;
+        box-shadow: var(--shadow);
+        transition: background 0.25s ease, box-shadow 0.25s ease;
+      }
+
+      header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+
+      .eyebrow {
+        font-size: 0.75rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      h1 {
+        font-family: Fraunces, Georgia, serif;
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+      }
+
+      .theme-toggle {
+        flex-shrink: 0;
+        width: 44px;
+        height: 44px;
+        border: 1.5px solid var(--line);
+        border-radius: 12px;
+        background: var(--toggle-bg);
+        color: var(--ink);
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        transition: border-color 0.15s ease, background 0.15s ease;
+      }
+
+      .theme-toggle:hover {
+        border-color: var(--accent);
+      }
+
+      .theme-toggle:focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      .theme-toggle svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .theme-toggle .icon-sun,
+      [data-theme="dark"] .theme-toggle .icon-moon {
+        display: none;
+      }
+
+      [data-theme="dark"] .theme-toggle .icon-sun {
+        display: block;
+      }
+
+      label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+
+      .field {
+        margin-bottom: 20px;
+      }
+
+      .input-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--chip);
+        border: 1.5px solid var(--line);
+        border-radius: 14px;
+        padding: 4px 14px;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.25s ease;
+      }
+
+      .input-wrap:focus-within {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
+      }
+
+      .affix {
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 1.05rem;
+      }
+
+      input[type="number"] {
+        width: 100%;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        font: inherit;
+        font-size: 1.25rem;
+        font-weight: 500;
+        padding: 12px 0;
+        color: var(--ink);
+      }
+
+      input[type="number"]::-webkit-outer-spin-button,
+      input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      input[type="number"] {
+        appearance: textfield;
+        -moz-appearance: textfield;
+      }
+
+      .presets {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .presets button {
+        font: inherit;
+        font-weight: 600;
+        font-size: 0.85rem;
+        border: 1.5px solid var(--line);
+        background: var(--chip);
+        color: var(--ink);
+        border-radius: 10px;
+        padding: 8px 0;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+      }
+
+      .presets button:hover {
+        border-color: var(--accent);
+        color: var(--accent-dark);
+      }
+
+      .presets button.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+
+      [data-theme="dark"] .presets button.active {
+        color: #12211c;
+      }
+
+      .results {
+        margin-top: 8px;
+        background: var(--results);
+        color: var(--results-text);
+        border-radius: 18px;
+        padding: 20px 22px;
+        display: grid;
+        gap: 16px;
+        box-shadow: inset 0 0 0 1px var(--results-rule);
+      }
+
+      .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+      }
+
+      .row span {
+        color: var(--results-muted);
+        font-size: 0.9rem;
+      }
+
+      .row strong {
+        font-family: Fraunces, Georgia, serif;
+        font-size: 1.55rem;
+        font-weight: 560;
+        letter-spacing: -0.02em;
+      }
+
+      .row.total {
+        padding-top: 14px;
+        border-top: 1px solid var(--results-rule);
+      }
+
+      .row.total strong {
+        color: var(--results-total);
+        font-size: 1.85rem;
+      }
+
+      .hint {
+        margin-top: 14px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <div>
+          <p class="eyebrow">At the table</p>
+          <h1>Tip calculator</h1>
+        </div>
+        <button
+          type="button"
+          class="theme-toggle"
+          id="theme-toggle"
+          aria-label="Switch to dark mode"
+          aria-pressed="false"
+        >
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5Z"
+            />
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2" />
+            <path stroke-linecap="round" d="M12 3v1.6M12 19.4V21M4.6 4.6l1.1 1.1M18.3 18.3l1.1 1.1M3 12h1.6M19.4 12H21M4.6 19.4l1.1-1.1M18.3 5.7l1.1-1.1" />
+          </svg>
+        </button>
+      </header>
+
+      <div class="field">
+        <label for="bill">Bill amount</label>
+        <div class="input-wrap">
+          <span class="affix">$</span>
+          <input
+            id="bill"
+            type="number"
+            min="0"
+            step="0.01"
+            inputmode="decimal"
+            placeholder="0.00"
+            autocomplete="off"
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="tip">Tip percentage</label>
+        <div class="input-wrap">
+          <input
+            id="tip"
+            type="number"
+            min="0"
+            step="0.1"
+            inputmode="decimal"
+            placeholder="15"
+            value="15"
+            autocomplete="off"
+          />
+          <span class="affix">%</span>
+        </div>
+        <div class="presets" role="group" aria-label="Common tip percentages">
+          <button type="button" data-tip="10">10%</button>
+          <button type="button" data-tip="15" class="active">15%</button>
+          <button type="button" data-tip="18">18%</button>
+          <button type="button" data-tip="20">20%</button>
+          <button type="button" data-tip="25">25%</button>
+        </div>
+      </div>
+
+      <section class="results" aria-live="polite">
+        <div class="row">
+          <span>Tip amount</span>
+          <strong id="tip-amount">$0.00</strong>
+        </div>
+        <div class="row total">
+          <span>Total</span>
+          <strong id="total">$0.00</strong>
+        </div>
+      </section>
+
+      <p class="hint">Totals update as you type.</p>
+    </main>
+
+    <script>
+      const billInput = document.getElementById("bill");
+      const tipInput = document.getElementById("tip");
+      const tipAmountEl = document.getElementById("tip-amount");
+      const totalEl = document.getElementById("total");
+      const presetButtons = document.querySelectorAll(".presets button");
+      const themeToggle = document.getElementById("theme-toggle");
+
+      const money = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+      });
+
+      function parseAmount(value) {
+        const n = Number.parseFloat(value);
+        return Number.isFinite(n) && n >= 0 ? n : 0;
+      }
+
+      function syncPresets(tip) {
+        presetButtons.forEach((button) => {
+          const match = Number(button.dataset.tip) === tip;
+          button.classList.toggle("active", match);
+        });
+      }
+
+      function calculate() {
+        const bill = parseAmount(billInput.value);
+        const tipPercent = parseAmount(tipInput.value);
+        const tipAmount = bill * (tipPercent / 100);
+        const total = bill + tipAmount;
+
+        tipAmountEl.textContent = money.format(tipAmount);
+        totalEl.textContent = money.format(total);
+        syncPresets(tipPercent);
+      }
+
+      function currentTheme() {
+        return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+      }
+
+      function applyTheme(theme) {
+        document.documentElement.dataset.theme = theme;
+        localStorage.setItem("tip-theme", theme);
+        const dark = theme === "dark";
+        themeToggle.setAttribute("aria-pressed", String(dark));
+        themeToggle.setAttribute(
+          "aria-label",
+          dark ? "Switch to light mode" : "Switch to dark mode"
+        );
+      }
+
+      billInput.addEventListener("input", calculate);
+      tipInput.addEventListener("input", calculate);
+
+      presetButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          tipInput.value = button.dataset.tip;
+          calculate();
+          tipInput.focus();
+        });
+      });
+
+      themeToggle.addEventListener("click", () => {
+        applyTheme(currentTheme() === "dark" ? "light" : "dark");
+      });
+
+      applyTheme(currentTheme());
+      calculate();
+    </script>
+  </body>
+</html>
