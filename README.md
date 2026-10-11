@@ -46,6 +46,7 @@ No build step or dependencies are needed.
 tip-calculator/
 ├── .github/workflows/deploy.yml   # CI/CD: lint + deploy to GitHub Pages
 ├── index.html                     # markup, styles and logic in a single file
+├── LICENSE                        # MIT License
 └── README.md
 ```
 
@@ -62,4 +63,4 @@ Cursor generated the initial scaffold of the app from a short prompt and then he
 
 ## License
 
-Free to use and modify.
+This project is licensed under the [MIT License](LICENSE).
