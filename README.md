@@ -1,5 +1,9 @@
 # Tip Calculator
 
+[![CI/CD](https://github.com/Hasalawa/tip-calculator/actions/workflows/deploy.yml/badge.svg)](https://github.com/Hasalawa/tip-calculator/actions/workflows/deploy.yml)
+
+**Live demo:** https://hasalawa.github.io/tip-calculator/
+
 A clean, single-page tip calculator built with plain HTML, CSS and JavaScript. Enter a bill, pick a tip percentage, and see the tip and total update instantly. Built with [Cursor](https://cursor.com) for MLH Global Hack Week: Hacktoberfest (Challenge 1: Build a Mini App with Cursor).
 
 ## Features
@@ -40,9 +44,17 @@ No build step or dependencies are needed.
 
 ```
 tip-calculator/
-├── index.html   # markup, styles and logic in a single file
+├── .github/workflows/deploy.yml   # CI/CD: lint + deploy to GitHub Pages
+├── index.html                     # markup, styles and logic in a single file
 └── README.md
 ```
+
+## CI/CD
+
+A GitHub Actions workflow (`.github/workflows/deploy.yml`) runs on every push and pull request to `main`:
+
+1. **Test:** lints `index.html` with HTMLHint
+2. **Deploy:** if the lint passes on `main`, the site is published to GitHub Pages automatically
 
 ## How Cursor helped
 
